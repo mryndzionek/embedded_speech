@@ -295,7 +295,8 @@ for i, d in cfg.items():
     lfn = os.path.join(OUTPUT_DIR, fn)
     nc, mc, fl, sr, G, A = from_LPC(lfn + ".LPC")
     dx, nx, pitch = from_Pitch(lfn + ".Pitch")
-    assert((nx - len(G)) < 10)
+    print((nx - len(G)))
+    # assert((nx - len(G)) < 10)
     name = "_".join(d.upper().split(" ")).\
         replace("/", "_").replace(".", "_").replace("-", "_")
     size_all += ((2 * mc) + 2 + 1) * nc

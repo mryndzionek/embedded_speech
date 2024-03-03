@@ -51,7 +51,7 @@ static fix16_t excitation(lpc_filter_t *f, uint32_t rnd)
         }
         else
         {
-            y = fix_mul(0.1, noise);
+            y = fix_mul(0.4, noise);
         }
     }
     return y;
@@ -111,6 +111,7 @@ fix16_t lpc_filter_exec(lpc_filter_t *f, uint32_t rnd)
 
     // de-emphasis
     fix16_t de_y = fix_add(ny, fix_mul(LPC_DEEMPHASIS_FACTOR, f->de_y));
+    // fix16_t de_y = ny;
 
     // dc-blocking
     y = fix_add(fix_add(de_y, -f->de_y), fix_mul(DC_BLOCK_FACTOR, f->dc_y));
