@@ -158,7 +158,7 @@ def from_Pitch(fn):
 
 
 def gen_C(nc, mc, fl, sr, data):
-    alpha = math.exp(-2.0 * math.pi * 50.0 / sr)
+    alpha = math.exp(-2.0 * math.pi * 60.0 / sr)
 
     ls = [
         "#ifndef __LPC_DATA__",
@@ -243,8 +243,62 @@ def gen_C(nc, mc, fl, sr, data):
     write_lines_to_file(ls, "lpc_data.c")
 
 
-data = ["The quick brown fox jumps over the lazy dog"]
-data.extend(list(range(0, 101)))
+def gen_avr(nc, mc, fl, sr, data):
+    alpha = math.exp(-2.0 * math.pi * 50.0 / sr)
+
+    ls = [
+        "#ifndef __LPC_DATA__",
+        "#define __LPC_DATA__",
+        "",
+        "#include <stddef.h>",
+        "#ifdef __AVR__",
+        "#include <avr/pgmspace.h>",
+        "#else",
+        "#define PROGMEM",
+        "#endif",
+        "",
+        '#include "fix.h"',
+        "",
+        "#define LPC_ORDER ({})".format(mc),
+        "#define LPC_FRAME_LEN ({})".format(fl),
+        "#define LPC_SAMPLE_RATE ({})".format(sr),
+        "#define LPC_DEEMPHASIS_FACTOR ({})".format(float_to_fix(alpha, (1 << 10))),
+        "",
+    ]
+
+    for name, i, nc, frame in data:
+        ls.append(f"const fix16_t LPC_{i}_A[{nc * mc}] PROGMEM = {{")
+        for a, _, _ in frame:
+            a = ", ".join(list(map(lambda x: float_to_fix(-x), a)))
+            ls.append(f"    {a},")
+        ls.append("};\n")
+
+        ls.append(f"const uint8_t LPC_{i}_PS[{nc}] PROGMEM = {{")
+        l = "    "
+        for _, _, p in frame:
+            if p > 0:
+                ps = round(sr / p)
+                if ps > 255:
+                    ps = 255
+            else:
+                ps = 0
+            l += f"0x{ps:02X}, "
+        ls.append(l[:-2])
+        ls.append("};\n")
+
+        ls.append(f"const fix16_t LPC_{i}_G[{nc}] PROGMEM = {{")
+        l = "    "
+        for _, g, _ in frame:
+            l += f"{float_to_fix(math.sqrt(g))}, "
+        ls.append(l[:-2])
+        ls.append("};\n")
+
+    ls.append("\n#endif // __LPC_DATA__\n")
+    write_lines_to_file(ls, "lpc_data_avr.h")
+
+
+data = ["temperature", "minus", "point"]
+data.extend(list(range(0, 20)) + list(range(20, 60, 10)))
 
 try:
     os.mkdir(OUTPUT_DIR)
@@ -294,7 +348,7 @@ for i, d in cfg.items():
     lfn = os.path.join(OUTPUT_DIR, fn)
     nc, mc, fl, sr, G, A = from_LPC(lfn + ".LPC")
     dx, nx, pitch = from_Pitch(lfn + ".Pitch")
-    print((nx - len(G)))
+    # print((nx - len(G)))
     # assert((nx - len(G)) < 10)
     name = (
         "_".join(d.upper().split(" "))
@@ -306,5 +360,6 @@ for i, d in cfg.items():
     data.append((name, i, nc, list(zip(A, G, pitch))))
 
 gen_C(nc, mc, fl, sr, data)
+gen_avr(nc, mc, fl, sr, data)
 
 print("Overall size: {} kB".format(size_all / 1024))

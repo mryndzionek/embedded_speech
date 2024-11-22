@@ -16,7 +16,6 @@ struct _lpc_filter_t
     fix16_t v[LPC_ORDER];
     fix16_t a[LPC_ORDER];
     fix16_t de_y;
-    fix16_t dc_y;
 };
 
 struct _lpc_seq_decoder_t
@@ -36,7 +35,7 @@ static fix16_t excitation(lpc_filter_t *f, uint32_t rnd)
 
     fix16_t noise = (rnd % (2 * FIX_ONE)) - FIX_ONE;
 
-    if (f->ps == 0)
+    if (f->ps < 0x15)
     {
         // unvoiced
         y = fix_mul(f->g, noise);
@@ -44,14 +43,14 @@ static fix16_t excitation(lpc_filter_t *f, uint32_t rnd)
     else
     {
         // voiced
-        if ((f->t - last_p) >= (f->ps * 5))
+        if ((f->t - last_p) >= (2 * f->ps))
         {
             last_p = f->t;
             y = f->g;
         }
         else
         {
-            y = fix_mul(0.4, noise);
+            y = 0;
         }
     }
     return y;
@@ -81,7 +80,6 @@ void lpc_filter_reset(lpc_filter_t *f)
     }
 
     f->de_y = FIX_ZERO;
-    f->dc_y = FIX_ZERO;
     f->g = FIX_ZERO;
     f->i = 0;
     f->ps = 0;
@@ -102,21 +100,16 @@ void lpc_filter_update(lpc_filter_t *f, const int16_t a[LPC_ORDER], int16_t g, u
 fix16_t lpc_filter_exec(lpc_filter_t *f, uint32_t rnd)
 {
     fix16_t y;
-    fix16_t ny = excitation(f, rnd);
+    int32_t ny = excitation(f, rnd);
 
     for (size_t k = 0; k < LPC_ORDER; k++)
     {
-        ny = fix_add(ny, fix_mul(f->a[k], f->v[k]));
+        ny += fix_mul(f->a[k], f->v[k]);
     }
 
     // de-emphasis
-    fix16_t de_y = fix_add(ny, fix_mul(LPC_DEEMPHASIS_FACTOR, f->de_y));
-    // fix16_t de_y = ny;
-
-    // dc-blocking
-    y = fix_add(fix_add(de_y, -f->de_y), fix_mul(DC_BLOCK_FACTOR, f->dc_y));
-    f->de_y = de_y;
-    f->dc_y = y;
+    y = ny + fix_mul(LPC_DEEMPHASIS_FACTOR, f->de_y);
+    f->de_y = y;
 
     for (size_t i = LPC_ORDER - 1; i > 0; i--)
     {

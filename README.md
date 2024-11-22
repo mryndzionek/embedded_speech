@@ -28,10 +28,10 @@ enough to be performed even on small embedded platforms.
 3. Run the application:
 
    ```
-   ./decoder_test | play -r 4000 -c 1 -b 16 -t s16 -
+   ./decoder_test | play -r 16000 -c 1 -b 16 -t s16 -
    ```
    or
    ```
-   ./decoder_test | sox -r 4000 -c 1 -t s16 - out.wav
+   ./decoder_test | sox -r 16000 -c 1 -t s16 - out.wav
    ```
    to export to .wav file

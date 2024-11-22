@@ -1,5 +1,7 @@
 data/
 decoder/build/
 .vscode/
+env/
+lpc_data_avr.h
 lpc_data.h
 lpc_data.c
