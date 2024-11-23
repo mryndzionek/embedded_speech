@@ -3,7 +3,7 @@ form Test command line calls
     sentence Text ???
 endform
 
-synth = Create SpeechSynthesizer: "English (Great Britain)", "Female2"
+synth = Create SpeechSynthesizer: "English (Great Britain)", "AnxiousAndy"
 To Sound: text$, 0
 Scale peak: 0.99
 Save as WAV file: "data/" + string$(number) + ".wav"

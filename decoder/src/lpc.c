@@ -43,10 +43,10 @@ static fix16_t excitation(lpc_filter_t *f, uint32_t rnd)
     else
     {
         // voiced
-        if ((f->t - last_p) >= (2 * f->ps))
+        if ((f->t - last_p) >= (f->ps))
         {
             last_p = f->t;
-            y = f->g;
+            y = 4 * f->g;
         }
         else
         {

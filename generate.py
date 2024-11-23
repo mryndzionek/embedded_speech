@@ -244,7 +244,7 @@ def gen_C(nc, mc, fl, sr, data):
 
 
 def gen_avr(nc, mc, fl, sr, data):
-    alpha = math.exp(-2.0 * math.pi * 50.0 / sr)
+    alpha = math.exp(-2.0 * math.pi * 60.0 / sr)
 
     ls = [
         "#ifndef __LPC_DATA__",
@@ -267,7 +267,15 @@ def gen_avr(nc, mc, fl, sr, data):
         "",
     ]
 
+    ls.append("typedef enum {")
+    for i, name in enumerate([d[0] for d in data]):
+        ls.append(f"    lpc_name_{name.lower()} = {i},")
+    ls.append("    lpc_name_max,")
+    ls.append("} lpc_name_e;\n")
+
     for name, i, nc, frame in data:
+        est_size = ((2 * mc) + 2 + 1) * nc
+        ls.append("// {} - {} bytes - {}".format(i, est_size, name))
         ls.append(f"const fix16_t LPC_{i}_A[{nc * mc}] PROGMEM = {{")
         for a, _, _ in frame:
             a = ", ".join(list(map(lambda x: float_to_fix(-x), a)))
@@ -317,7 +325,7 @@ def gen_avr(nc, mc, fl, sr, data):
     write_lines_to_file(ls, "lpc_data_avr.h")
 
 
-data = ["temperature", "minus", "point"]
+data = ["temperature", "minus", "point", "out of range"]
 data.extend(list(range(0, 20)) + list(range(20, 60, 10)))
 
 try:
