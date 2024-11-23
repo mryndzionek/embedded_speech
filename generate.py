@@ -267,7 +267,15 @@ def gen_avr(nc, mc, fl, sr, data):
         "",
     ]
 
+    ls.append("typedef enum {")
+    for i, name in enumerate([d[0] for d in data]):
+        ls.append(f"    lpc_name_{name.lower()} = {i},")
+    ls.append("    lpc_name_max,")
+    ls.append("} lpc_name_e;\n")
+
     for name, i, nc, frame in data:
+        est_size = ((2 * mc) + 2 + 1) * nc
+        ls.append("// {} - {} bytes - {}".format(i, est_size, name))
         ls.append(f"const fix16_t LPC_{i}_A[{nc * mc}] PROGMEM = {{")
         for a, _, _ in frame:
             a = ", ".join(list(map(lambda x: float_to_fix(-x), a)))

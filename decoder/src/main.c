@@ -58,6 +58,7 @@ int main(int argc, char *argv[])
                 uint32_t rnd = rand();
                 finished = lpc_seq_decoder_exec(dec, rnd, &y);
                 int64_t v = (int64_t)y * INT16_MAX / (2 * FIX_ONE);
+                
                 // interpolate
                 buf_tmp[samples++] = v;
                 buf_tmp[samples++] = 0;
