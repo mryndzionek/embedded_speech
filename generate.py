@@ -259,6 +259,7 @@ def gen_avr(nc, mc, fl, sr, data):
         "",
         '#include "fix.h"',
         "",
+        "#define LPC_NUM ({})".format(len(data)),
         "#define LPC_ORDER ({})".format(mc),
         "#define LPC_FRAME_LEN ({})".format(fl),
         "#define LPC_SAMPLE_RATE ({})".format(sr),
@@ -292,6 +293,25 @@ def gen_avr(nc, mc, fl, sr, data):
             l += f"{float_to_fix(math.sqrt(g))}, "
         ls.append(l[:-2])
         ls.append("};\n")
+
+    ls.append(f"const uint16_t LPC_A_ADDRS[{len(data)}] PROGMEM = {{")
+    for i in range(len(data)):
+        ls.append(f"    (uint16_t)LPC_{i}_A,")
+    ls.append("};\n")
+
+    ls.append(f"const uint16_t LPC_PS_ADDRS[{len(data)}] PROGMEM = {{")
+    for i in range(len(data)):
+        ls.append(f"    (uint16_t)LPC_{i}_PS,")
+    ls.append("};\n")
+
+    ls.append(f"const uint16_t LPC_G_ADDRS[{len(data)}] PROGMEM = {{")
+    for i in range(len(data)):
+        ls.append(f"    (uint16_t)LPC_{i}_G,")
+    ls.append("};\n")
+
+    ls.append(f"const uint16_t LPC_LENGTHS[{len(data)}] PROGMEM = {{")
+    ls.append("    " + ", ".join([str(d[2]) for d in data]))
+    ls.append("};\n")
 
     ls.append("\n#endif // __LPC_DATA__\n")
     write_lines_to_file(ls, "lpc_data_avr.h")
